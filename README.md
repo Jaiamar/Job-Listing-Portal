@@ -1,81 +1,88 @@
-# Job-Listing-Portal
+# 💼 JobPortalNetwork
 
-A dynamic and professional job portal connecting seekers and employers with an intuitive interface. Users can search for jobs with filters, create profiles, upload resumes, and apply directly. Employers can post detailed listings. It provides real-time updates, secure login, and advanced dashboards to help manage applications efficiently.
+> A professional, LinkedIn-style job listing platform and professional network built with the MERN stack.
 
-## 🚀 Features
+![JobPortalNetwork Demo Banner](https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=2071)
+*(Note: Example Banner image)*
 
-- **User & Employer Roles**: Distinct experiences and dashboards for job seekers and employers.
-- **Job Search & Filtering**: Advanced search functionality with category and location filters for job seekers.
-- **Profile Management**: Users can build their profiles, upload resumes, and manage their applications.
-- **Job Posting**: Employers can post, edit, and manage job listings with ease.
-- **Secure Authentication**: Robust authentication and authorization using JWT and bcrypt.
-- **Responsive Design**: Modern and clean user interface built with React and Tailwind CSS, fully responsive across all devices.
-- **Security**: Features security best practices with Helmet and express-rate-limit.
+JobPortalNetwork is a full-stack web application designed to connect **Job Seekers** with **Employers**. It features a robust authentication system, distinct role-based dashboards, and premium user interfaces built for a seamless user experience.
+
+---
+
+## ✨ Features
+
+### 👤 For Job Seekers
+- **Dynamic Profiles:** Visually stunning profiles featuring custom avatars, profile banners, and dynamic user headlines.
+- **Experience & Education Tracking:** Interactive modules to accurately record work history and university degrees fully linked to user profiles.
+- **Skills Tagging:** Quickly add and remove interactive skill tags to showcase technical and soft competencies.
+
+### 🏢 For Employers
+- **Company Branding:** Interactive business profiles highlighting company summary, industry, size, and headquarters.
+- **Job Creation Hub (Upcoming):** Employers have dedicated spaces to securely post and track real-time job listings to applicants on the platform.
+
+### 🛡️ For Administrators
+- **Admin Dashboard:** A secured, protected route specifically designed for system administrators.
+- **User Auditing:** View and monitor all users continuously enrolled on the platform dynamically sorted through MongoDB queries.
+- *Default Admin Access:* Comes pre-seeded with a default system Admin (`admin@admin.com`) on initial database boot.
+
+### 🔒 Core Platform Features
+- **JWT Standard Authentication:** High-security access tracking using access tokens and automatically rotated HTTP-only refresh tokens.
+- **Account Protection:** Express Rate Limiting protects the server and authentication systems organically from brute-force botnets and credential-stuffing attacks.
+
+---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **React 19** - UI Library
-- **Vite** - Build Tool
-- **Tailwind CSS 4** - Utility-first styling framework
+**Frontend Framework:** React 18 & Vite
+**Styling Architecture:** Tailwind CSS v3 & core standard Lucide Icons
+**Routing:** React Router v6
+**Backend Runtime:** Node.js & Express.js
+**Database ORM:** Mongoose / MongoDB
+**Security Validation:** Bcryptjs / JSONWebToken
 
-### Backend
-- **Node.js & Express 5** - Server framework
-- **MongoDB & Mongoose** - NoSQL Database and ODM
-- **JWT (JSON Web Tokens)** - Authentication
-- **Bcryptjs** - Password hashing
-- **Helmet & Express-Rate-Limit** - Security middlewares
-- **Cors** - Cross-origin resource sharing
+---
 
-## 📂 Project Structure
+## 🚀 Running Locally
 
-```text
-Job-Listing-Portal/
-├── client/                 # React Frontend (Vite + Tailwind CSS)
-│   ├── src/                # Source files
-│   ├── public/             # Static assets
-│   └── package.json        # Frontend dependencies
-├── server/                 # Node.js Backend (Express + MongoDB)
-│   ├── index.js            # Entry point for backend
-│   └── package.json        # Backend dependencies
-├── .gitignore              # Git ignore file
-└── README.md               # Project documentation
-```
-
-## ⚙️ Installation & Setup
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
-- Node.js (v18+ recommended)
-- MongoDB locally installed or a MongoDB Atlas connection string.
+- Node.js installed locally
+- MongoDB installed and running locally, or access to a MongoDB Atlas Cluster URI string.
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/Jaiamar/Job-Listing-Portal.git
-cd Job-Listing-Portal
-```
+### Setup Instructions
 
-### 2. Setup Backend
-```bash
-cd server
-npm install
-```
-- Create a `.env` file in the `server` directory and configure the necessary environment variables (e.g., `PORT`, `MONGO_URI`, `JWT_SECRET`).
-- Start the backend server:
-```bash
-npm start
-```
+1. **Clone the repository:**
+   \`\`\`bash
+   git clone https://github.com/Jaiamar/Job-Listing-Portal.git
+   cd Job-Listing-Portal
+   \`\`\`
 
-### 3. Setup Frontend
-Open a new terminal and navigate to the client directory:
-```bash
-cd client
-npm install
-```
-- Start the frontend development server:
-```bash
-npm run dev
-```
+2. **Frontend Setup (React):**
+   \`\`\`bash
+   cd client
+   npm install
+   npm run dev
+   \`\`\`
+   *Your frontend will boot on `http://localhost:5173/`*
 
-## 🛡️ License
+3. **Backend Setup (Express/Node):**
+   Open a secondary terminal:
+   \`\`\`bash
+   cd server
+   npm install
+   # Create a .env file here optionally for MongoDB URIs and JWT secrets.
+   npm start
+   \`\`\`
+   *Your backend logic will automatically connect to MongoDB and operate on `http://localhost:5000/`*
+   *The default admin account (`admin@admin.com` - `adminpassword`) will be organically created for exploration.*
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+---
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are always welcome! Feel free to check the issues page.
+
+## 📝 License
+
+This project is open-source and available under the terms of the MIT License.

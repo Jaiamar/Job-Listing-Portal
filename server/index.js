@@ -47,8 +47,8 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin', 'moderator'],
-    default: 'user'
+    enum: ['job_seeker', 'employer', 'admin'],
+    required: true
   },
   // Security fields for account lockout
   loginAttempts: {
@@ -69,19 +69,14 @@ userSchema.virtual('isLocked').get(function() {
 });
 
 // Pre-save hook to hash password
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function() {
   const user = this;
   
   // Only hash the password if it has been modified (or is new)
-  if (!user.isModified('password')) return next();
+  if (!user.isModified('password')) return;
 
-  try {
-    const salt = await bcrypt.genSalt(10); // 10 rounds is standard
-    user.password = await bcrypt.hash(user.password, salt);
-    next();
-  } catch (err) {
-    return next(err);
-  }
+  const salt = await bcrypt.genSalt(10); // 10 rounds is standard
+  user.password = await bcrypt.hash(user.password, salt);
 });
 
 // Method to verify password
@@ -98,13 +93,60 @@ userSchema.methods.resetLoginAttempts = function() {
 
 const User = mongoose.model('User', userSchema);
 
+// --- Profile Schemas (LinkedIn-style) ---
+
+const jobSeekerProfileSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  headline: { type: String, trim: true, default: 'New to the network' },
+  about: { type: String, trim: true, default: '' },
+  experience: [{
+    title: { type: String, required: true },
+    company: { type: String, required: true },
+    location: String,
+    startDate: Date,
+    endDate: Date, // null if current
+    current: { type: Boolean, default: false },
+    description: String
+  }],
+  education: [{
+    school: { type: String, required: true },
+    degree: String,
+    fieldOfStudy: String,
+    startDate: Date,
+    endDate: Date
+  }],
+  skills: [String],
+  resumeUrl: String, // URL or path
+  contactEmail: String,
+  contactPhone: String,
+  location: String,
+});
+
+const employerProfileSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  companyName: { type: String, required: true, trim: true },
+  tagline: { type: String, trim: true, default: '' },
+  industry: String,
+  companySize: String, // e.g. "1-10", "11-50", "51-200"
+  logoUrl: String,
+  bannerUrl: String,
+  aboutUs: { type: String, trim: true, default: '' },
+  website: String,
+  contactEmail: String,
+  contactPhone: String,
+  headquarters: String,
+});
+
+const JobSeekerProfile = mongoose.model('JobSeekerProfile', jobSeekerProfileSchema);
+const EmployerProfile = mongoose.model('EmployerProfile', employerProfileSchema);
+
 // --- Application Setup ---
 const app = express();
 
 // Security Middleware
 app.use(helmet()); // Sets generic security HTTP headers
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true // allow cookies for refresh tokens
 }));
 app.use(express.json({ limit: '10kb' })); // Body parser, limit payload size
@@ -163,11 +205,15 @@ app.get('/', (req, res) => {
  */
 app.post('/api/auth/register', authLimiter, async (req, res) => {
   try {
-    const { name, email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword, role } = req.body;
 
     // Basic Validation
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: 'All fields are required (name, email, password, role)' });
+    }
+
+    if (!['job_seeker', 'employer'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role provided' });
     }
 
     if (password !== confirmPassword) {
@@ -186,8 +232,15 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
     }
 
     // Create user
-    const newUser = new User({ name, email, password });
+    const newUser = new User({ name, email, password, role });
     await newUser.save();
+
+    // Create related profile
+    if (role === 'job_seeker') {
+      await JobSeekerProfile.create({ userId: newUser._id, contactEmail: email });
+    } else if (role === 'employer') {
+      await EmployerProfile.create({ userId: newUser._id, companyName: name, contactEmail: email });
+    }
 
     // Optionally auto-login after register
     const { accessToken, refreshToken } = generateTokens(newUser);
@@ -393,10 +446,77 @@ app.get('/api/users/profile', requireAuth, (req, res) => {
   });
 });
 
+/**
+ * @route GET /api/profiles/me
+ * @desc Get the detailed profile (Job Seeker or Employer) for the logged-in user
+ */
+app.get('/api/profiles/me', requireAuth, async (req, res) => {
+  try {
+    let profile = null;
+    if (req.user.role === 'job_seeker') {
+      profile = await JobSeekerProfile.findOne({ userId: req.user._id });
+    } else if (req.user.role === 'employer') {
+      profile = await EmployerProfile.findOne({ userId: req.user._id });
+    }
+
+    if (!profile) {
+      return res.status(404).json({ message: 'Detailed profile not found' });
+    }
+
+    res.status(200).json({ profile, user: req.user });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error retrieving profile', error: err.message });
+  }
+});
+
+/**
+ * @route PUT /api/profiles/job-seeker
+ * @desc Update the detailed Job Seeker profile
+ */
+app.put('/api/profiles/job-seeker', requireAuth, authorize('job_seeker'), async (req, res) => {
+  try {
+    const updatedProfile = await JobSeekerProfile.findOneAndUpdate(
+      { userId: req.user._id },
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    res.status(200).json({ message: 'Profile updated successfully', profile: updatedProfile });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update profile', error: err.message });
+  }
+});
+
+/**
+ * @route PUT /api/profiles/employer
+ * @desc Update the detailed Employer profile
+ */
+app.put('/api/profiles/employer', requireAuth, authorize('employer'), async (req, res) => {
+  try {
+    const updatedProfile = await EmployerProfile.findOneAndUpdate(
+      { userId: req.user._id },
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    res.status(200).json({ message: 'Company profile updated successfully', profile: updatedProfile });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update company profile', error: err.message });
+  }
+});
+
 app.get('/api/admin/dashboard', requireAuth, authorize('admin'), (req, res) => {
   res.status(200).json({
     message: 'Welcome to the admin dashboard!'
   });
+});
+
+app.get('/api/admin/users', requireAuth, authorize('admin'), async (req, res) => {
+  try {
+    // Return all users except passwords, sorted newest first
+    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    res.status(200).json({ users });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch users', error: err.message });
+  }
 });
 
 
@@ -413,8 +533,30 @@ mongoose.connect(config.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: 
 
 module.exports = { app, User, requireAuth, authorize };
 
+// --- Seed Default Admin ---
+const seedDefaultAdmin = async () => {
+  try {
+    const adminExists = await User.findOne({ email: 'admin@admin.com' });
+    if (!adminExists) {
+      const newAdmin = new User({
+        name: 'System Admin',
+        email: 'admin@admin.com',
+        password: 'adminpassword', // Will be hashed automatically by pre-save hook
+        role: 'admin'
+      });
+      await newAdmin.save();
+      console.log('✅ Default Admin created: admin@admin.com | Password: adminpassword');
+    }
+  } catch (err) {
+    console.error('Failed to seed default admin:', err.message);
+  }
+};
+
 mongoose.connect(config.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
+  .then(() => {
+    console.log('MongoDB Connected');
+    seedDefaultAdmin();
+  })
   .catch(err => console.error('Database connection warning (Server still running):', err.message));
 
 app.listen(config.PORT, () => console.log(`Server running on port ${config.PORT}`));
