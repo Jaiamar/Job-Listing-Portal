@@ -90,7 +90,10 @@ const JobSeekerProfile = () => {
   // --- Experience Logic ---
   const handleAddExp = (e) => {
     e.preventDefault();
-    const updatedExp = [...profile.experience, expForm];
+    const expToSave = { ...expForm };
+    if (!expToSave.startDate) delete expToSave.startDate;
+    if (!expToSave.endDate) delete expToSave.endDate;
+    const updatedExp = [...profile.experience, expToSave];
     syncProfile({ ...profile, experience: updatedExp });
     setShowExpModal(false);
     setExpForm({ title: '', company: '', location: '', startDate: '', endDate: '', description: '', current: false });
@@ -104,7 +107,10 @@ const JobSeekerProfile = () => {
   // --- Education Logic ---
   const handleAddEdu = (e) => {
     e.preventDefault();
-    const updatedEdu = [...profile.education, eduForm];
+    const eduToSave = { ...eduForm };
+    if (!eduToSave.startDate) delete eduToSave.startDate;
+    if (!eduToSave.endDate) delete eduToSave.endDate;
+    const updatedEdu = [...profile.education, eduToSave];
     syncProfile({ ...profile, education: updatedEdu });
     setShowEduModal(false);
     setEduForm({ school: '', degree: '', fieldOfStudy: '', startDate: '', endDate: '' });

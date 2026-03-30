@@ -140,6 +140,20 @@ const employerProfileSchema = new mongoose.Schema({
 const JobSeekerProfile = mongoose.model('JobSeekerProfile', jobSeekerProfileSchema);
 const EmployerProfile = mongoose.model('EmployerProfile', employerProfileSchema);
 
+// --- Job Listing Schema ---
+const jobListingSchema = new mongoose.Schema({
+  employerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  title: { type: String, required: true, trim: true },
+  companyName: { type: String, trim: true },
+  description: { type: String, required: true },
+  qualifications: { type: String },
+  responsibilities: { type: String },
+  location: { type: String, required: true },
+  salaryRange: { type: String },
+}, { timestamps: true });
+
+const JobListing = mongoose.model('JobListing', jobListingSchema);
+
 // --- Application Setup ---
 const app = express();
 
@@ -500,6 +514,127 @@ app.put('/api/profiles/employer', requireAuth, authorize('employer'), async (req
     res.status(200).json({ message: 'Company profile updated successfully', profile: updatedProfile });
   } catch (err) {
     res.status(500).json({ message: 'Failed to update company profile', error: err.message });
+  }
+});
+
+/**
+ * --- Job Listing Routes ---
+ */
+
+/**
+ * @route POST /api/jobs
+ * @desc Create a new job listing
+ */
+app.post('/api/jobs', requireAuth, authorize('employer'), async (req, res) => {
+  try {
+    const { title, description, qualifications, responsibilities, location, salaryRange } = req.body;
+    
+    // Get employer profile to get company name
+    const employerProfile = await EmployerProfile.findOne({ userId: req.user._id });
+    const companyName = employerProfile ? employerProfile.companyName : req.user.name;
+
+    const newJob = new JobListing({
+      employerId: req.user._id,
+      companyName,
+      title,
+      description,
+      qualifications,
+      responsibilities,
+      location,
+      salaryRange
+    });
+
+    await newJob.save();
+    res.status(201).json({ message: 'Job listing created successfully', job: newJob });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to create job listing', error: err.message });
+  }
+});
+
+/**
+ * @route GET /api/jobs/my-jobs
+ * @desc Get all job listings for the logged-in employer
+ */
+app.get('/api/jobs/my-jobs', requireAuth, authorize('employer'), async (req, res) => {
+  try {
+    const jobs = await JobListing.find({ employerId: req.user._id }).sort({ createdAt: -1 });
+    res.status(200).json({ jobs });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch your job listings', error: err.message });
+  }
+});
+
+/**
+ * @route GET /api/jobs/all
+ * @desc Get all job listings (for job seekers)
+ */
+app.get('/api/jobs/all', async (req, res) => {
+  try {
+    const jobs = await JobListing.find().sort({ createdAt: -1 });
+    res.status(200).json({ jobs });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch job listings', error: err.message });
+  }
+});
+
+/**
+ * @route GET /api/jobs/:id
+ * @desc Get a single job listing by ID
+ */
+app.get('/api/jobs/:id', async (req, res) => {
+  try {
+    const job = await JobListing.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: 'Job listing not found' });
+    res.status(200).json({ job });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch job listing', error: err.message });
+  }
+});
+
+/**
+ * @route PUT /api/jobs/:id
+ * @desc Update a job listing
+ */
+app.put('/api/jobs/:id', requireAuth, authorize('employer'), async (req, res) => {
+  try {
+    const job = await JobListing.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: 'Job listing not found' });
+
+    // Check ownership
+    if (job.employerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to edit this job listing' });
+    }
+
+    const updatedJob = await JobListing.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({ message: 'Job listing updated successfully', job: updatedJob });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update job listing', error: err.message });
+  }
+});
+
+/**
+ * @route DELETE /api/jobs/:id
+ * @desc Delete a job listing
+ */
+app.delete('/api/jobs/:id', requireAuth, authorize('employer'), async (req, res) => {
+  try {
+    const job = await JobListing.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: 'Job listing not found' });
+
+    // Check ownership
+    if (job.employerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this job listing' });
+    }
+
+    await JobListing.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: 'Job listing deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete job listing', error: err.message });
   }
 });
 
