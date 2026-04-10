@@ -12,20 +12,25 @@ export default function EmployerOverview() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const { data: jobsResp } = await api.get('/jobs/employer/my-jobs');
+        const [{ data: jobsResp }, { data: appsResp }] = await Promise.all([
+          api.get('/jobs/employer/mine'),
+          api.get('/applications/employer/all')
+        ]);
         const jobs = jobsResp.data;
+        const apps = appsResp.data;
         
-        // Sum applicants & views
-        const applicants = jobs.reduce((acc, job) => acc + (job.applicantsCount || 0), 0);
-        const views = jobs.reduce((acc, job) => acc + (job.viewsCount || 0), 0);
-
         setStats({
-          activeJobs: jobs.filter(j => j.status === 'Open').length,
-          totalApplicants: applicants,
-          totalViews: views
+          activeJobs: jobs.filter(j => j.status === 'Active').length,
+          totalApplicants: apps.length,
+          totalViews: jobs.reduce((acc, job) => acc + (job.viewsCount || 0), 0)
         });
 
-        setRecentJobs(jobs.slice(0, 3));
+        // Slice top 3 most recent and count applicants dynamically
+        const recent = jobs.slice(0, 3).map(job => ({
+          ...job,
+          applicantsCount: apps.filter(a => a.jobId?._id === job._id).length
+        }));
+        setRecentJobs(recent);
       } catch (err) {
         toast.error('Failed to load dashboard data');
       } finally {
@@ -93,7 +98,7 @@ export default function EmployerOverview() {
                   {recentJobs.map(job => (
                     <tr key={job._id}>
                       <td className="font-bold">{job.title}</td>
-                      <td><span className={`badge ${job.status === 'Open' ? 'badge-success' : 'badge-neutral'}`}>{job.status}</span></td>
+                      <td><span className={`badge ${job.status === 'Active' ? 'badge-success' : 'badge-neutral'}`}>{job.status}</span></td>
                       <td>{job.applicantsCount || 0}</td>
                       <td>{new Date(job.createdAt).toLocaleDateString()}</td>
                     </tr>

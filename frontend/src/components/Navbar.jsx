@@ -12,6 +12,7 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [notifications, setNotifications] = useState([]);
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
@@ -24,7 +25,10 @@ export default function Navbar() {
 
   useEffect(() => {
     if (user) {
-      api.get('/notifications').then(({ data }) => setUnread(data.unreadCount || 0)).catch(() => {});
+      api.get('/notifications').then(({ data }) => {
+        setUnread(data.unreadCount || 0);
+        setNotifications(data.data || []);
+      }).catch(() => {});
     }
   }, [user]);
 
@@ -99,9 +103,18 @@ export default function Navbar() {
                       <span>Notifications</span>
                       {unread > 0 && <span className="badge badge-primary">{unread} new</span>}
                     </div>
-                    <div className="notif-empty">
-                      <FiBell size={24} />
-                      <p>Check your dashboard for updates</p>
+                    <div className="notif-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                      {notifications.length > 0 ? notifications.map(n => (
+                        <div key={n._id} className={`notif-item ${n.isRead ? 'read' : 'unread'}`} style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)', background: n.isRead ? 'transparent' : 'var(--color-primary-light)' }}>
+                          <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-primary)', lineHeight: 1.4 }}>{n.message}</p>
+                          <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', display: 'block' }}>{new Date(n.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      )) : (
+                        <div className="notif-empty">
+                          <FiBell size={24} />
+                          <p>Check your dashboard for updates</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

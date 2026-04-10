@@ -43,8 +43,8 @@ export default function SeekerApplications() {
                         <span className="text-xs text-muted">{app.jobId?.location}</span>
                       </div>
                     </td>
-                    <td>{app.jobId?.employer?.companyName || 'Unknown'}</td>
-                    <td>{new Date(app.appliedAt).toLocaleDateString()}</td>
+                    <td>{app.jobId?.employerId?.name || 'Unknown'}</td>
+                    <td>{new Date(app.createdAt).toLocaleDateString()}</td>
                     <td>
                       <span className={`badge status-${app.status.toLowerCase().replace(' ', '-')}`}>
                         {app.status}

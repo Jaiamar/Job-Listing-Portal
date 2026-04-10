@@ -55,9 +55,7 @@ export default function SeekerProfile() {
     formData.append('resume', resumeFile);
     
     try {
-      const res = await api.post('/profiles/seeker/resume', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post('/profiles/seeker/resume', formData);
       toast.success('Resume uploaded successfully');
       setResumeFile(null);
     } catch (err) {

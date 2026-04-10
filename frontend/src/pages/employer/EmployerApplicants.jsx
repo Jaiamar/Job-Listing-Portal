@@ -21,7 +21,7 @@ export default function EmployerApplicants() {
 
   const handleStatusChange = async (appId, newStatus) => {
     try {
-      await api.put(`/applications/${appId}/status`, { status: newStatus });
+      await api.put(`/applications/${appId}`, { status: newStatus });
       toast.success('Status updated');
       setApplications(applications.map(app => app._id === appId ? { ...app, status: newStatus } : app));
     } catch (err) {
@@ -65,7 +65,7 @@ export default function EmployerApplicants() {
                     </td>
                     <td>
                       <span className="font-bold">{app.jobId?.title || 'Unknown Job'}</span>
-                      <span className="block text-xs mt-1">{new Date(app.appliedAt).toLocaleDateString()}</span>
+                      <span className="block text-xs mt-1 text-muted">{new Date(app.createdAt).toLocaleDateString()}</span>
                     </td>
                     <td>
                       <span className={`badge status-${app.status.toLowerCase().replace(' ', '-')}`}>
@@ -75,7 +75,7 @@ export default function EmployerApplicants() {
                     <td>
                       <div className="flex gap-2">
                         {app.resumeUrl && (
-                           <a href={app.resumeUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm" title="View Resume">
+                           <a href={`http://localhost:5000${app.resumeUrl}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm" title="View Resume">
                              <FiDownload />
                            </a>
                         )}

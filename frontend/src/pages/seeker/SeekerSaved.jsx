@@ -38,7 +38,7 @@ export default function SeekerSaved() {
       </div>
 
       {savedJobs.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--space-5)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 400px))', justifyContent: 'center', gap: 'var(--space-5)' }}>
           {savedJobs.map(job => (
             <JobCard key={job._id} job={job} showSave={true} isSaved={true} onSave={handleUnsave} />
           ))}

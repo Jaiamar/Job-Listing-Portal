@@ -32,7 +32,7 @@ router.get('/seeker', protect, authorize('seeker', 'admin'), async (req, res) =>
 // PUT /api/profiles/seeker
 router.put('/seeker', protect, authorize('seeker'), async (req, res) => {
   try {
-    const allowed = ['bio', 'phone', 'address', 'skills', 'education', 'experience', 'linkedin', 'portfolio', 'availability'];
+    const allowed = ['title', 'bio', 'phone', 'address', 'skills', 'education', 'experience', 'linkedin', 'portfolio', 'availability'];
     const updates = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
 

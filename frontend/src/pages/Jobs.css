@@ -65,7 +65,7 @@
 }
 
 .mobile-filters-toggle {
-  display: none;
+  display: none !important;
   margin-bottom: var(--space-4);
 }
 
@@ -147,7 +147,8 @@
 
 .jobs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 400px));
+  justify-content: center;
   gap: var(--space-5);
   margin-bottom: var(--space-8);
 }
@@ -176,7 +177,7 @@
     transform: translateX(0);
     box-shadow: var(--shadow-xl);
   }
-  .mobile-filters-toggle { display: flex; }
+  .mobile-filters-toggle { display: flex !important; }
   .close-filters-btn { display: block; }
   .jobs-results { width: 100%; }
 }

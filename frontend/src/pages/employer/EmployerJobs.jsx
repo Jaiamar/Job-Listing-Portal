@@ -5,6 +5,7 @@ import { FiPlus, FiEdit, FiTrash2, FiX } from 'react-icons/fi';
 
 const INIT_JOB = {
   title: '', description: '', location: '', jobType: 'Full-Time',
+  status: 'Active',
   salaryRange: { min: '', max: '' },
   qualifications: '', responsibilities: '', deadline: ''
 };
@@ -21,7 +22,7 @@ export default function EmployerJobs() {
 
   const fetchJobs = () => {
     setLoading(true);
-    api.get('/jobs/employer/my-jobs')
+    api.get('/jobs/employer/mine')
       .then(res => setJobs(res.data.data))
       .catch(() => toast.error('Failed to load jobs'))
       .finally(() => setLoading(false));
@@ -123,8 +124,8 @@ export default function EmployerJobs() {
                     <span className="text-xs text-muted">{job.location}</span>
                   </td>
                   <td>{job.viewsCount}</td>
-                  <td>{job.applicantsCount}</td>
-                  <td><span className={`badge ${job.status === 'Open' ? 'badge-success' : 'badge-neutral'}`}>{job.status}</span></td>
+                  <td>{job.applicantsCount || 0}</td>
+                  <td><span className={`badge ${job.status === 'Active' ? 'badge-success' : 'badge-neutral'}`}>{job.status}</span></td>
                   <td>
                     <div className="flex gap-2">
                       <button className="btn btn-outline btn-sm" onClick={() => openForm(job)}><FiEdit/></button>
@@ -184,7 +185,7 @@ export default function EmployerJobs() {
 
                 <div className="form-group">
                   <label className="form-label">Job Description *</label>
-                  <textarea className="form-textarea" rows="4" name="description" value={form.description} onChange={handleChange} required></textarea>
+                  <textarea className="form-textarea" rows="4" name="description" value={form.description} onChange={handleChange} required minLength={50} placeholder="Minimum 50 characters required"></textarea>
                 </div>
                 
                 <div className="form-group">
@@ -198,8 +199,8 @@ export default function EmployerJobs() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Application Deadline</label>
-                  <input type="date" className="form-input" name="deadline" value={form.deadline} onChange={handleChange} />
+                  <label className="form-label">Application Deadline *</label>
+                  <input type="date" className="form-input" name="deadline" value={form.deadline} onChange={handleChange} required />
                 </div>
               </div>
 

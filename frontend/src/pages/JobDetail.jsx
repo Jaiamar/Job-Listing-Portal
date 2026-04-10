@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FiMapPin, FiClock, FiDollarSign, FiBriefcase, FiUsers, FiBookmark, FiArrowLeft, FiCheckCircle } from 'react-icons/fi';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { FiMapPin, FiClock, FiDollarSign, FiBriefcase, FiUsers, FiBookmark, FiArrowLeft, FiCheckCircle, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,7 @@ import './JobDetail.css';
 
 export default function JobDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user, isSeeker } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);

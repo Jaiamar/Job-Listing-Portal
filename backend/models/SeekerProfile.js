@@ -25,6 +25,7 @@ const seekerProfileSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  title: String,
   bio: { type: String, maxlength: [2000, 'Bio cannot exceed 2000 characters'] },
   phone: String,
   address: String,

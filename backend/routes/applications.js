@@ -55,7 +55,8 @@ router.post('/', protect, authorize('seeker'), async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({ success: false, message: 'You have already applied for this job' });
     }
-    res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message, stack: error.stack });
   }
 });
 
@@ -68,6 +69,24 @@ router.get('/seeker', protect, authorize('seeker'), async (req, res) => {
       .sort({ createdAt: -1 });
     res.json({ success: true, data: applications });
   } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @route   GET /api/applications/employer/all
+// @access  Private (Employer)
+router.get('/employer/all', protect, authorize('employer'), async (req, res) => {
+  try {
+    const jobs = await Job.find({ employerId: req.user._id }).select('_id');
+    const jobIds = jobs.map(j => j._id);
+    const applications = await Application.find({ jobId: { $in: jobIds } })
+      .populate('seekerId', 'name email phone')
+      .populate('jobId', 'title')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: applications });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
